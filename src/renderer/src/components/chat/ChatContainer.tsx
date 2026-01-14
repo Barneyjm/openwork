@@ -165,15 +165,27 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
     }
   }, [agentValues.todos, setTodos])
 
-  // Refresh threads when loading state changes from true to false (stream completed)
+  // Persist messages and refresh threads when stream completes
   const prevLoadingRef = useRef(false)
   useEffect(() => {
     if (prevLoadingRef.current && !stream.isLoading) {
-      // Stream just completed
+      // Stream just completed - persist streaming messages to store
+      const streamMsgs = stream.messages || []
+      for (const msg of streamMsgs) {
+        if (msg.id) {
+          const storeMsg: Message = {
+            id: msg.id,
+            role: (msg.type === 'human' ? 'user' : 'assistant') as Message['role'],
+            content: typeof msg.content === 'string' ? msg.content : '',
+            created_at: new Date()
+          }
+          appendMessage(storeMsg)
+        }
+      }
       loadThreads()
     }
     prevLoadingRef.current = stream.isLoading
-  }, [stream.isLoading, loadThreads])
+  }, [stream.isLoading, stream.messages, loadThreads, appendMessage])
 
   // Combine store messages with streaming messages
   const displayMessages = useMemo(() => {

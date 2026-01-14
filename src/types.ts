@@ -47,6 +47,13 @@ export interface IPCToolCallEvent {
   tool_calls: Array<{ id?: string; name?: string; args?: string }>
 }
 
+// Raw stream event - forwards LangGraph stream chunks directly
+export interface IPCStreamEvent {
+  type: 'stream'
+  mode: 'messages' | 'values'
+  data: unknown
+}
+
 export interface IPCDoneEvent {
   type: 'done'
 }
@@ -60,5 +67,6 @@ export type IPCEvent =
   | IPCValuesEvent
   | IPCTokenEvent
   | IPCToolCallEvent
+  | IPCStreamEvent
   | IPCDoneEvent
   | IPCErrorEvent

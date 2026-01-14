@@ -3,7 +3,7 @@ import Store from 'electron-store'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import type { ModelConfig, Provider, ProviderId } from '../types'
-import { setWorkspacePath, getWorkspacePath, getCheckpointer } from '../agent/runtime'
+import { setWorkspacePath, getCheckpointer } from '../agent/runtime'
 
 // Encrypted store for API keys
 const store = new Store({
@@ -89,7 +89,7 @@ const AVAILABLE_MODELS: ModelConfig[] = [
   }
 ]
 
-export function registerModelHandlers(ipcMain: IpcMain) {
+export function registerModelHandlers(ipcMain: IpcMain): void {
   // List available models
   ipcMain.handle('models:list', async () => {
     // Check which models have API keys configured
@@ -149,6 +149,7 @@ export function registerModelHandlers(ipcMain: IpcMain) {
 
   // Sync version info
   ipcMain.on('app:version', (event) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     event.returnValue = require('../../package.json').version
   })
 
@@ -318,75 +319,72 @@ export function registerModelHandlers(ipcMain: IpcMain) {
   })
 
   // Load files from disk into the workspace view (read-only, doesn't modify agent state)
-  ipcMain.handle(
-    'workspace:loadFromDisk',
-    async (_event, { threadId }: { threadId: string }) => {
-      const { getThread } = await import('../db')
+  ipcMain.handle('workspace:loadFromDisk', async (_event, { threadId }: { threadId: string }) => {
+    const { getThread } = await import('../db')
 
-      // Get workspace path from thread metadata
-      const thread = getThread(threadId)
-      const metadata = thread?.metadata ? JSON.parse(thread.metadata) : {}
-      const workspacePath = metadata.workspacePath as string | null
+    // Get workspace path from thread metadata
+    const thread = getThread(threadId)
+    const metadata = thread?.metadata ? JSON.parse(thread.metadata) : {}
+    const workspacePath = metadata.workspacePath as string | null
 
-      if (!workspacePath) {
-        return { success: false, error: 'No workspace folder linked', files: [] }
-      }
+    if (!workspacePath) {
+      return { success: false, error: 'No workspace folder linked', files: [] }
+    }
 
-      try {
-        const files: Array<{
-          path: string
-          is_dir: boolean
-          size?: number
-          modified_at?: string
-        }> = []
+    try {
+      const files: Array<{
+        path: string
+        is_dir: boolean
+        size?: number
+        modified_at?: string
+      }> = []
 
-        // Recursively read directory
-        async function readDir(dirPath: string, relativePath: string = ''): Promise<void> {
-          const entries = await fs.readdir(dirPath, { withFileTypes: true })
+      // Recursively read directory
+      async function readDir(dirPath: string, relativePath: string = ''): Promise<void> {
+        const entries = await fs.readdir(dirPath, { withFileTypes: true })
 
-          for (const entry of entries) {
-            // Skip hidden files and common non-project files
-            if (entry.name.startsWith('.') || entry.name === 'node_modules') {
-              continue
-            }
+        for (const entry of entries) {
+          // Skip hidden files and common non-project files
+          if (entry.name.startsWith('.') || entry.name === 'node_modules') {
+            continue
+          }
 
-            const fullPath = path.join(dirPath, entry.name)
-            const relPath = relativePath ? `${relativePath}/${entry.name}` : entry.name
+          const fullPath = path.join(dirPath, entry.name)
+          const relPath = relativePath ? `${relativePath}/${entry.name}` : entry.name
 
-            if (entry.isDirectory()) {
-              files.push({
-                path: '/' + relPath,
-                is_dir: true
-              })
-              await readDir(fullPath, relPath)
-            } else {
-              const stat = await fs.stat(fullPath)
-              files.push({
-                path: '/' + relPath,
-                is_dir: false,
-                size: stat.size,
-                modified_at: stat.mtime.toISOString()
-              })
-            }
+          if (entry.isDirectory()) {
+            files.push({
+              path: '/' + relPath,
+              is_dir: true
+            })
+            await readDir(fullPath, relPath)
+          } else {
+            const stat = await fs.stat(fullPath)
+            files.push({
+              path: '/' + relPath,
+              is_dir: false,
+              size: stat.size,
+              modified_at: stat.mtime.toISOString()
+            })
           }
         }
+      }
 
-        await readDir(workspacePath)
+      await readDir(workspacePath)
 
-        return {
-          success: true,
-          files,
-          workspacePath
-        }
-      } catch (e) {
-        return {
-          success: false,
-          error: e instanceof Error ? e.message : 'Unknown error',
-          files: []
-        }
+      return {
+        success: true,
+        files,
+        workspacePath
+      }
+    } catch (e) {
+      return {
+        success: false,
+        error: e instanceof Error ? e.message : 'Unknown error',
+        files: []
       }
     }
-  )
+  })
 
   // Read a single file's contents from disk
   ipcMain.handle(
