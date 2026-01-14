@@ -333,7 +333,7 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
             ))}
 
             {/* Streaming indicator - only show if no streaming messages yet */}
-            {stream.isLoading && stream.messages.length === 0 && (
+            {stream.isLoading && (
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Loader2 className="size-4 animate-spin" />
                 Agent is thinking...

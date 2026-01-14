@@ -1,38 +1,34 @@
 import type { UseStreamTransport } from '@langchain/langgraph-sdk/react'
+import type { ToolCall, ToolCallChunk } from '@langchain/core/messages'
 import type { StreamPayload, StreamEvent, IPCEvent, IPCStreamEvent } from '../../../types'
 import type { Subagent } from '../types'
 
-// Types for serialized LangGraph message chunks
-// LangChain uses a special serialization format:
-// { lc: 1, type: "constructor", id: ["langchain_core", "messages", "AIMessageChunk"], kwargs: { ... } }
+/**
+ * Serialized LangGraph message chunk.
+ * LangChain uses a special serialization format:
+ * { lc: 1, type: "constructor", id: ["langchain_core", "messages", "AIMessageChunk"], kwargs: { ... } }
+ */
 interface SerializedMessageChunk {
-  // LangChain serialization marker
+  /** LangChain serialization marker */
   lc?: number
   type?: string
-  // Class identifier array like ['langchain_core', 'messages', 'AIMessageChunk']
+  /** Class identifier array like ['langchain_core', 'messages', 'AIMessageChunk'] */
   id?: string[]
-  // Actual message data is in kwargs
+  /** Actual message data is in kwargs */
   kwargs?: {
     id?: string
     content?: string | Array<{ type: string; text?: string }>
-    tool_calls?: Array<{
-      id?: string
-      name?: string
-      args?: Record<string, unknown>
-      type?: string
-    }>
-    tool_call_chunks?: Array<{
-      id?: string
-      name?: string
-      args?: string
-      index?: number
-      type?: string
-    }>
+    tool_calls?: ToolCall[]
+    tool_call_chunks?: ToolCallChunk[]
     tool_call_id?: string
     name?: string
   }
 }
 
+/**
+ * Metadata accompanying streamed messages from LangGraph.
+ * These fields are not exported from the SDK as they are internal runtime metadata.
+ */
 interface MessageMetadata {
   langgraph_node?: string
   langgraph_checkpoint_ns?: string
@@ -415,38 +411,11 @@ export class ElectronIPCTransport implements UseStreamTransport {
       console.log('[Transport] Values mode - processing state')
 
       // Values mode returns full state with serialized LangChain messages
-      // Messages are in LangChain serialization format: { lc, type, id: [...], kwargs: { ... } }
-      interface ValuesModeMessage {
-        lc?: number
-        type?: string
-        id?: string[] // Class identifier like ['langchain_core', 'messages', 'AIMessage']
-        kwargs?: {
-          id?: string
-          content?: string | Array<{ type: string; text?: string }>
-          name?: string
-          tool_calls?: Array<{
-            id?: string
-            name?: string
-            args?: Record<string, unknown>
-            type?: string
-          }>
-          tool_call_id?: string
-        }
-      }
-
       const state = data as {
-        messages?: ValuesModeMessage[]
+        messages?: SerializedMessageChunk[]
         todos?: { id?: string; content?: string; status?: string }[]
         files?: Record<string, unknown> | Array<{ path: string; is_dir?: boolean; size?: number }>
         workspacePath?: string
-        subagents?: Array<{
-          id?: string
-          name?: string
-          description?: string
-          status?: string
-          startedAt?: Date | string
-          completedAt?: Date | string
-        }>
         __interrupt__?: { id?: string; tool_call?: unknown }
       }
 
@@ -553,14 +522,6 @@ export class ElectronIPCTransport implements UseStreamTransport {
             data: { type: 'workspace', files: filesList, path: state.workspacePath || '/' }
           })
         }
-      }
-
-      // Emit subagents
-      if (state.subagents?.length) {
-        events.push({
-          event: 'custom',
-          data: { type: 'subagents', subagents: state.subagents }
-        })
       }
 
       // Emit interrupt
