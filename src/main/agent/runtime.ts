@@ -40,7 +40,12 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | string
       model,
       anthropicApiKey: apiKey
     })
-  } else if (model.startsWith('gpt')) {
+  } else if (
+    model.startsWith('gpt') ||
+    model.startsWith('o1') ||
+    model.startsWith('o3') ||
+    model.startsWith('o4')
+  ) {
     const apiKey = getApiKey('openai')
     console.log('[Runtime] OpenAI API key present:', !!apiKey)
     if (!apiKey) {

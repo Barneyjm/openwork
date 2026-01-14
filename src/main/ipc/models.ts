@@ -53,21 +53,63 @@ const AVAILABLE_MODELS: ModelConfig[] = [
     description: 'Fast and cost-effective for real-time tasks',
     available: true
   },
-  // OpenAI GPT-5.1/4.1 series (latest as of Jan 2026)
+  // OpenAI GPT-5 series (latest as of Jan 2026)
+  {
+    id: 'gpt-5.2',
+    name: 'GPT-5.2',
+    provider: 'openai',
+    model: 'gpt-5.2',
+    description: 'Latest flagship with enhanced coding and agentic capabilities',
+    available: true
+  },
   {
     id: 'gpt-5.1',
     name: 'GPT-5.1',
     provider: 'openai',
     model: 'gpt-5.1',
-    description: 'OpenAI flagship model with advanced reasoning',
+    description: 'Advanced reasoning and robust performance',
     available: true
   },
+  // OpenAI o-series reasoning models
+  {
+    id: 'o3',
+    name: 'o3',
+    provider: 'openai',
+    model: 'o3',
+    description: 'Advanced reasoning for complex problem-solving',
+    available: true
+  },
+  {
+    id: 'o3-mini',
+    name: 'o3 Mini',
+    provider: 'openai',
+    model: 'o3-mini',
+    description: 'Cost-effective reasoning with faster response times',
+    available: true
+  },
+  {
+    id: 'o4-mini',
+    name: 'o4 Mini',
+    provider: 'openai',
+    model: 'o4-mini',
+    description: 'Fast, efficient reasoning model succeeding o3',
+    available: true
+  },
+  {
+    id: 'o1',
+    name: 'o1',
+    provider: 'openai',
+    model: 'o1',
+    description: 'Premium reasoning for research, coding, math and science',
+    available: true
+  },
+  // OpenAI GPT-4 series
   {
     id: 'gpt-4.1',
     name: 'GPT-4.1',
     provider: 'openai',
     model: 'gpt-4.1',
-    description: 'Excellent balance of capability and cost',
+    description: 'Strong instruction-following with 1M context window',
     available: true
   },
   {
@@ -75,7 +117,31 @@ const AVAILABLE_MODELS: ModelConfig[] = [
     name: 'GPT-4.1 Mini',
     provider: 'openai',
     model: 'gpt-4.1-mini',
-    description: 'Lightweight and cost-efficient',
+    description: 'Faster, smaller version balancing performance and efficiency',
+    available: true
+  },
+  {
+    id: 'gpt-4.1-nano',
+    name: 'GPT-4.1 Nano',
+    provider: 'openai',
+    model: 'gpt-4.1-nano',
+    description: 'Most cost-efficient for lighter tasks',
+    available: true
+  },
+  {
+    id: 'gpt-4o',
+    name: 'GPT-4o',
+    provider: 'openai',
+    model: 'gpt-4o',
+    description: 'Versatile model for text generation and comprehension',
+    available: true
+  },
+  {
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    provider: 'openai',
+    model: 'gpt-4o-mini',
+    description: 'Cost-efficient variant with faster response times',
     available: true
   },
   // Google Gemini 3 series (latest as of Jan 2026)

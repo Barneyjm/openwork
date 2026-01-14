@@ -9,6 +9,32 @@ import {
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
+export async function selectWorkspaceFolder(
+  currentThreadId: string | null,
+  setWorkspacePath: (path: string | null) => void,
+  setWorkspaceFiles: (files: any[]) => void,
+  setLoading: (loading: boolean) => void,
+  setOpen?: (open: boolean) => void
+): Promise<void> {
+  if (!currentThreadId) return
+  setLoading(true)
+  try {
+    const path = await window.api.workspace.select(currentThreadId)
+    if (path) {
+      setWorkspacePath(path)
+      const result = await window.api.workspace.loadFromDisk(currentThreadId)
+      if (result.success && result.files) {
+        setWorkspaceFiles(result.files)
+      }
+    }
+    if (setOpen) setOpen(false)
+  } catch (e) {
+    console.error('[WorkspacePicker] Select folder error:', e)
+  } finally {
+    setLoading(false)
+  }
+}
+
 export function WorkspacePicker(): React.JSX.Element {
   const { workspacePath, currentThreadId, setWorkspacePath, setWorkspaceFiles } = useAppStore()
   const [open, setOpen] = useState(false)
@@ -34,24 +60,7 @@ export function WorkspacePicker(): React.JSX.Element {
   }, [currentThreadId, setWorkspacePath, setWorkspaceFiles])
 
   async function handleSelectFolder(): Promise<void> {
-    if (!currentThreadId) return
-    setLoading(true)
-    try {
-      const path = await window.api.workspace.select(currentThreadId)
-      if (path) {
-        setWorkspacePath(path)
-        // Load files from the newly selected folder
-        const result = await window.api.workspace.loadFromDisk(currentThreadId)
-        if (result.success && result.files) {
-          setWorkspaceFiles(result.files)
-        }
-      }
-      setOpen(false)
-    } catch (e) {
-      console.error('[WorkspacePicker] Select folder error:', e)
-    } finally {
-      setLoading(false)
-    }
+    await selectWorkspaceFolder(currentThreadId, setWorkspacePath, setWorkspaceFiles, setLoading, setOpen)
   }
 
   const folderName = workspacePath?.split('/').pop()
