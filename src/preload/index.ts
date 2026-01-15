@@ -180,6 +180,15 @@ const api = {
     }> => {
       return ipcRenderer.invoke('workspace:readFile', { threadId, filePath })
     },
+    readBinaryFile: (threadId: string, filePath: string): Promise<{
+      success: boolean
+      content?: string
+      size?: number
+      modified_at?: string
+      error?: string
+    }> => {
+      return ipcRenderer.invoke('workspace:readBinaryFile', { threadId, filePath })
+    },
     // Listen for file changes in the workspace
     onFilesChanged: (
       callback: (data: { threadId: string; workspacePath: string }) => void

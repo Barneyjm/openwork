@@ -69,6 +69,13 @@ interface CustomAPI {
       modified_at?: string
       error?: string
     }>
+    readBinaryFile: (threadId: string, filePath: string) => Promise<{
+      success: boolean
+      content?: string
+      size?: number
+      modified_at?: string
+      error?: string
+    }>
     onFilesChanged: (
       callback: (data: { threadId: string; workspacePath: string }) => void
     ) => () => void

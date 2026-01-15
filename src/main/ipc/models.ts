@@ -412,6 +412,61 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
       }
     }
   )
+
+  // Read a binary file (images, PDFs, etc.) and return as base64
+  ipcMain.handle(
+    'workspace:readBinaryFile',
+    async (_event, { threadId, filePath }: { threadId: string; filePath: string }) => {
+      const { getThread } = await import('../db')
+
+      // Get workspace path from thread metadata
+      const thread = getThread(threadId)
+      const metadata = thread?.metadata ? JSON.parse(thread.metadata) : {}
+      const workspacePath = metadata.workspacePath as string | null
+
+      if (!workspacePath) {
+        return {
+          success: false,
+          error: 'No workspace folder linked'
+        }
+      }
+
+      try {
+        // Convert virtual path to full disk path
+        const relativePath = filePath.startsWith('/') ? filePath.slice(1) : filePath
+        const fullPath = path.join(workspacePath, relativePath)
+
+        // Security check: ensure the resolved path is within the workspace
+        const resolvedPath = path.resolve(fullPath)
+        const resolvedWorkspace = path.resolve(workspacePath)
+        if (!resolvedPath.startsWith(resolvedWorkspace)) {
+          return { success: false, error: 'Access denied: path outside workspace' }
+        }
+
+        // Check if file exists
+        const stat = await fs.stat(fullPath)
+        if (stat.isDirectory()) {
+          return { success: false, error: 'Cannot read directory as file' }
+        }
+
+        // Read file as binary and convert to base64
+        const buffer = await fs.readFile(fullPath)
+        const base64 = buffer.toString('base64')
+
+        return {
+          success: true,
+          content: base64,
+          size: stat.size,
+          modified_at: stat.mtime.toISOString()
+        }
+      } catch (e) {
+        return {
+          success: false,
+          error: e instanceof Error ? e.message : 'Unknown error'
+        }
+      }
+    }
+  )
 }
 
 // Re-export getApiKey from storage for use in agent runtime
