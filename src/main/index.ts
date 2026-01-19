@@ -5,42 +5,6 @@ import { registerThreadHandlers } from './ipc/threads'
 import { registerModelHandlers } from './ipc/models'
 import { initializeDatabase } from './db'
 
-// Suppress expected errors from LangChain stream handlers when streams are aborted
-// These occur when the LLM is still generating but the stream has been closed
-const originalConsoleError = console.error
-console.error = (...args: unknown[]) => {
-  const message = args.map((a) => String(a)).join(' ')
-  if (
-    message.includes('Controller is already closed') ||
-    message.includes('ERR_INVALID_STATE') ||
-    (message.includes('StreamMessagesHandler') && message.includes('aborted'))
-  ) {
-    // Expected during stream cancellation - suppress
-    return
-  }
-  originalConsoleError.apply(console, args)
-}
-
-process.on('uncaughtException', (error) => {
-  if (
-    error.message?.includes('Controller is already closed') ||
-    error.message?.includes('aborted')
-  ) {
-    // Expected during stream cancellation - suppress
-    return
-  }
-  originalConsoleError('Uncaught exception:', error)
-})
-
-process.on('unhandledRejection', (reason) => {
-  const message = reason instanceof Error ? reason.message : String(reason)
-  if (message?.includes('Controller is already closed') || message?.includes('aborted')) {
-    // Expected during stream cancellation - suppress
-    return
-  }
-  originalConsoleError('Unhandled rejection:', reason)
-})
-
 let mainWindow: BrowserWindow | null = null
 
 // Simple dev check - replaces @electron-toolkit/utils is.dev

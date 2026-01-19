@@ -92,9 +92,9 @@ export function ContextUsageIndicator({
   const usagePercent = Math.min((usedTokens / contextLimit) * 100, 100)
 
   // Determine color based on usage
-  let colorClass = 'text-muted-foreground'
-  let bgColorClass = 'bg-muted-foreground/20'
-  let barColorClass = 'bg-muted-foreground'
+  let colorClass = 'text-blue-500'
+  let bgColorClass = 'bg-blue-500/20'
+  let barColorClass = 'bg-blue-500'
   let statusText = 'Normal'
 
   if (usagePercent >= 90) {
@@ -200,40 +200,48 @@ export function ContextUsageIndicator({
             </div>
           </div>
 
-          {/* Cache info (if available) */}
-          {hasCacheData && (
-            <div className="space-y-1.5 pt-2 border-t border-border">
-              <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Cache
-              </div>
-
-              <div className="space-y-1">
-                {tokenUsage.cacheReadTokens !== undefined && tokenUsage.cacheReadTokens > 0 && (
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 text-green-500">
-                      <Database className="size-3" />
-                      <span>Cache hits</span>
-                    </div>
-                    <span className="font-mono text-green-500">
-                      {formatTokenCountFull(tokenUsage.cacheReadTokens)}
-                    </span>
-                  </div>
-                )}
-
-                {tokenUsage.cacheCreationTokens !== undefined && tokenUsage.cacheCreationTokens > 0 && (
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 text-blue-500">
-                      <Database className="size-3" />
-                      <span>Cache created</span>
-                    </div>
-                    <span className="font-mono text-blue-500">
-                      {formatTokenCountFull(tokenUsage.cacheCreationTokens)}
-                    </span>
-                  </div>
-                )}
-              </div>
+          {/* Cache info (always show, with "none" state) */}
+          <div className="space-y-1.5 pt-2 border-t border-border">
+            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              Cache
             </div>
-          )}
+
+            <div className="space-y-1">
+              {hasCacheData ? (
+                <>
+                  {tokenUsage.cacheReadTokens !== undefined && tokenUsage.cacheReadTokens > 0 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-green-500">
+                        <Database className="size-3" />
+                        <span>Cache hits</span>
+                      </div>
+                      <span className="font-mono text-green-500">
+                        {formatTokenCountFull(tokenUsage.cacheReadTokens)}
+                      </span>
+                    </div>
+                  )}
+
+                  {tokenUsage.cacheCreationTokens !== undefined && tokenUsage.cacheCreationTokens > 0 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-blue-500">
+                        <Database className="size-3" />
+                        <span>Cache created</span>
+                      </div>
+                      <span className="font-mono text-blue-500">
+                        {formatTokenCountFull(tokenUsage.cacheCreationTokens)}
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-xs text-muted-foreground">
+                  No cached tokens
+                </div>
+              )}
+            </div>
+          </div>
+
+
 
           {/* Last updated */}
           <div className="pt-2 border-t border-border">
