@@ -8,13 +8,13 @@ import {
   useEffect,
   useSyncExternalStore,
   type ReactNode
-} from 'react'
+} from "react"
 
 /* eslint-disable react-refresh/only-export-components */
-import { useStream } from '@langchain/langgraph-sdk/react'
-import { ElectronIPCTransport } from './electron-transport'
-import type { Message, Todo, FileInfo, Subagent, HITLRequest } from '@/types'
-import type { DeepAgent } from '../../../main/agent/types'
+import { useStream } from "@langchain/langgraph-sdk/react"
+import { ElectronIPCTransport } from "./electron-transport"
+import type { Message, Todo, FileInfo, Subagent, HITLRequest } from "@/types"
+import type { DeepAgent } from "../../../main/agent/types"
 
 // Open file tab type
 export interface OpenFile {
@@ -43,7 +43,7 @@ export interface ThreadState {
   error: string | null
   currentModel: string
   openFiles: OpenFile[]
-  activeTab: 'agent' | string
+  activeTab: "agent" | string
   fileContents: Record<string, string>
   tokenUsage: TokenUsage | null
 }
@@ -53,7 +53,7 @@ type StreamInstance = ReturnType<typeof useStream<DeepAgent>>
 
 // Stream data that we want to be reactive
 interface StreamData {
-  messages: StreamInstance['messages']
+  messages: StreamInstance["messages"]
   isLoading: boolean
   stream: StreamInstance | null
 }
@@ -72,7 +72,7 @@ export interface ThreadActions {
   setCurrentModel: (modelId: string) => void
   openFile: (path: string, name: string) => void
   closeFile: (path: string) => void
-  setActiveTab: (tab: 'agent' | string) => void
+  setActiveTab: (tab: "agent" | string) => void
   setFileContents: (path: string, content: string) => void
 }
 
@@ -96,9 +96,9 @@ const createDefaultThreadState = (): ThreadState => ({
   subagents: [],
   pendingApproval: null,
   error: null,
-  currentModel: 'claude-sonnet-4-5-20250929',
+  currentModel: "claude-sonnet-4-5-20250929",
   openFiles: [],
-  activeTab: 'agent',
+  activeTab: "agent",
   fileContents: {},
   tokenUsage: null
 })
@@ -162,7 +162,7 @@ function ThreadStreamHolder({
   const stream = useStream<DeepAgent>({
     transport,
     threadId,
-    messagesKey: 'messages',
+    messagesKey: "messages",
     onCustomEvent: (data) => {
       onCustomEventRef.current(data as CustomEventData)
     },
@@ -211,7 +211,7 @@ function ThreadStreamHolder({
   return null
 }
 
-export function ThreadProvider({ children }: { children: ReactNode }): React.JSX.Element {
+export function ThreadProvider({ children }: { children: ReactNode }) {
   const [threadStates, setThreadStates] = useState<Record<string, ThreadState>>({})
   const [activeThreadIds, setActiveThreadIds] = useState<Set<string>>(new Set())
   const initializedThreadsRef = useRef<Set<string>>(new Set())
@@ -259,7 +259,11 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
     (threadId: string): ThreadState => {
       const state = threadStates[threadId] || createDefaultThreadState()
       if (state.pendingApproval) {
-        console.log('[ThreadContext] getThreadState returning pendingApproval for:', threadId, state.pendingApproval)
+        console.log(
+          "[ThreadContext] getThreadState returning pendingApproval for:",
+          threadId,
+          state.pendingApproval
+        )
       }
       return state
     },
@@ -282,10 +286,12 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
 
   // Parse error messages into user-friendly format
   const parseErrorMessage = useCallback((error: Error | string): string => {
-    const errorMessage = typeof error === 'string' ? error : error.message
+    const errorMessage = typeof error === "string" ? error : error.message
 
     // Check for context window exceeded errors
-    const contextWindowMatch = errorMessage.match(/prompt is too long: (\d+) tokens > (\d+) maximum/i)
+    const contextWindowMatch = errorMessage.match(
+      /prompt is too long: (\d+) tokens > (\d+) maximum/i
+    )
     if (contextWindowMatch) {
       const [, usedTokens, maxTokens] = contextWindowMatch
       const usedK = Math.round(parseInt(usedTokens) / 1000)
@@ -294,13 +300,17 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
     }
 
     // Check for rate limit errors
-    if (errorMessage.includes('rate_limit') || errorMessage.includes('429')) {
-      return 'Rate limit exceeded. Please wait a moment before sending another message.'
+    if (errorMessage.includes("rate_limit") || errorMessage.includes("429")) {
+      return "Rate limit exceeded. Please wait a moment before sending another message."
     }
 
     // Check for authentication errors
-    if (errorMessage.includes('401') || errorMessage.includes('invalid_api_key') || errorMessage.includes('authentication')) {
-      return 'Authentication failed. Please check your API key in settings.'
+    if (
+      errorMessage.includes("401") ||
+      errorMessage.includes("invalid_api_key") ||
+      errorMessage.includes("authentication")
+    ) {
+      return "Authentication failed. Please check your API key in settings."
     }
 
     // Return the original message for other errors
@@ -310,7 +320,7 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
   // Handle errors from ThreadStreamHolder
   const handleError = useCallback(
     (threadId: string, error: Error) => {
-      console.error('[ThreadContext] Stream error:', { threadId, error })
+      console.error("[ThreadContext] Stream error:", { threadId, error })
       const userFriendlyMessage = parseErrorMessage(error)
       updateThreadState(threadId, () => ({ error: userFriendlyMessage }))
     },
@@ -320,15 +330,19 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
   // Handle custom events from ThreadStreamHolder (interrupts, workspace updates, etc.)
   const handleCustomEvent = useCallback(
     (threadId: string, data: CustomEventData) => {
-      console.log('[ThreadContext] Custom event received:', { threadId, type: data.type, data })
+      console.log("[ThreadContext] Custom event received:", { threadId, type: data.type, data })
       switch (data.type) {
-        case 'interrupt':
+        case "interrupt":
           if (data.request) {
-            console.log('[ThreadContext] Setting pendingApproval for thread:', threadId, data.request)
+            console.log(
+              "[ThreadContext] Setting pendingApproval for thread:",
+              threadId,
+              data.request
+            )
             updateThreadState(threadId, () => ({ pendingApproval: data.request }))
           }
           break
-        case 'workspace':
+        case "workspace":
           if (Array.isArray(data.files)) {
             updateThreadState(threadId, (state) => {
               const fileMap = new Map(state.workspaceFiles.map((f) => [f.path, f]))
@@ -342,25 +356,25 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
             updateThreadState(threadId, () => ({ workspacePath: data.path }))
           }
           break
-        case 'subagents':
+        case "subagents":
           if (Array.isArray(data.subagents)) {
             updateThreadState(threadId, () => ({
               subagents: data.subagents!.map((s) => ({
                 id: s.id || crypto.randomUUID(),
-                name: s.name || 'Subagent',
-                description: s.description || '',
-                status: (s.status || 'pending') as 'pending' | 'running' | 'completed' | 'failed',
+                name: s.name || "Subagent",
+                description: s.description || "",
+                status: (s.status || "pending") as "pending" | "running" | "completed" | "failed",
                 startedAt: s.startedAt,
                 completedAt: s.completedAt
               }))
             }))
           }
           break
-        case 'token_usage':
+        case "token_usage":
           // Only update if we have meaningful token values (> 0)
           // This prevents resetting the usage when streaming ends
           if (data.usage && data.usage.inputTokens !== undefined && data.usage.inputTokens > 0) {
-            console.log('[ThreadContext] Token usage update:', {
+            console.log("[ThreadContext] Token usage update:", {
               threadId,
               inputTokens: data.usage.inputTokens,
               outputTokens: data.usage.outputTokens,
@@ -419,7 +433,7 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
         },
         setWorkspaceFiles: (files: FileInfo[] | ((prev: FileInfo[]) => FileInfo[])) => {
           updateThreadState(threadId, (state) => ({
-            workspaceFiles: typeof files === 'function' ? files(state.workspaceFiles) : files
+            workspaceFiles: typeof files === "function" ? files(state.workspaceFiles) : files
           }))
         },
         setWorkspacePath: (path: string | null) => {
@@ -465,14 +479,18 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
             let newActiveTab = state.activeTab
             if (state.activeTab === path) {
               const closedIndex = state.openFiles.findIndex((f) => f.path === path)
-              if (newOpenFiles.length === 0) newActiveTab = 'agent'
+              if (newOpenFiles.length === 0) newActiveTab = "agent"
               else if (closedIndex > 0) newActiveTab = newOpenFiles[closedIndex - 1].path
               else newActiveTab = newOpenFiles[0].path
             }
-            return { openFiles: newOpenFiles, activeTab: newActiveTab, fileContents: newFileContents }
+            return {
+              openFiles: newOpenFiles,
+              activeTab: newActiveTab,
+              fileContents: newFileContents
+            }
           })
         },
-        setActiveTab: (tab: 'agent' | string) => {
+        setActiveTab: (tab: "agent" | string) => {
           updateThreadState(threadId, () => ({ activeTab: tab }))
         },
         setFileContents: (path: string, content: string) => {
@@ -510,7 +528,7 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
           }
         }
       } catch (error) {
-        console.error('[ThreadContext] Failed to load thread details:', error)
+        console.error("[ThreadContext] Failed to load thread details:", error)
       }
 
       // Load thread history from checkpoints
@@ -551,31 +569,31 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
 
           if (channelValues?.messages && Array.isArray(channelValues.messages)) {
             const messages: Message[] = channelValues.messages.map((msg, index) => {
-              let role: 'user' | 'assistant' | 'system' | 'tool' = 'assistant'
-              if (typeof msg._getType === 'function') {
+              let role: "user" | "assistant" | "system" | "tool" = "assistant"
+              if (typeof msg._getType === "function") {
                 const type = msg._getType()
-                if (type === 'human') role = 'user'
-                else if (type === 'ai') role = 'assistant'
-                else if (type === 'system') role = 'system'
-                else if (type === 'tool') role = 'tool'
+                if (type === "human") role = "user"
+                else if (type === "ai") role = "assistant"
+                else if (type === "system") role = "system"
+                else if (type === "tool") role = "tool"
               } else if (msg.type) {
-                if (msg.type === 'human') role = 'user'
-                else if (msg.type === 'ai') role = 'assistant'
-                else if (msg.type === 'system') role = 'system'
-                else if (msg.type === 'tool') role = 'tool'
+                if (msg.type === "human") role = "user"
+                else if (msg.type === "ai") role = "assistant"
+                else if (msg.type === "system") role = "system"
+                else if (msg.type === "tool") role = "tool"
               }
 
-              let content: Message['content'] = ''
-              if (typeof msg.content === 'string') content = msg.content
-              else if (Array.isArray(msg.content)) content = msg.content as Message['content']
+              let content: Message["content"] = ""
+              if (typeof msg.content === "string") content = msg.content
+              else if (Array.isArray(msg.content)) content = msg.content as Message["content"]
 
               return {
                 id: msg.id || `msg-${index}`,
                 role,
                 content,
-                tool_calls: msg.tool_calls as Message['tool_calls'],
-                ...(role === 'tool' && msg.tool_call_id && { tool_call_id: msg.tool_call_id }),
-                ...(role === 'tool' && msg.name && { name: msg.name }),
+                tool_calls: msg.tool_calls as Message["tool_calls"],
+                ...(role === "tool" && msg.tool_call_id && { tool_call_id: msg.tool_call_id }),
+                ...(role === "tool" && msg.name && { name: msg.name }),
                 created_at: new Date()
               }
             })
@@ -585,8 +603,8 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
           if (channelValues?.todos && Array.isArray(channelValues.todos)) {
             const todos: Todo[] = channelValues.todos.map((todo, index) => ({
               id: todo.id || `todo-${index}`,
-              content: todo.content || '',
-              status: (todo.status as Todo['status']) || 'pending'
+              content: todo.content || "",
+              status: (todo.status as Todo["status"]) || "pending"
             }))
             actions.setTodos(todos)
           }
@@ -608,7 +626,7 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
                   name: req.action,
                   args: req.args
                 },
-                allowed_decisions: ['approve', 'reject', 'edit']
+                allowed_decisions: ["approve", "reject", "edit"]
               }
               actions.setPendingApproval(hitlRequest)
             } else if (reviewConfigs && reviewConfigs.length > 0) {
@@ -621,17 +639,17 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
                   name: config.toolName,
                   args: config.toolArgs
                 },
-                allowed_decisions: ['approve', 'reject', 'edit']
+                allowed_decisions: ["approve", "reject", "edit"]
               }
               actions.setPendingApproval(hitlRequest)
             }
           }
         }
       } catch (error) {
-        console.error('[ThreadContext] Failed to load thread history:', error)
+        console.error("[ThreadContext] Failed to load thread history:", error)
       }
     },
-    [getThreadActions]
+    [getThreadActions, updateThreadState]
   )
 
   const initializeThread = useCallback(
@@ -663,7 +681,8 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
       return next
     })
     setThreadStates((prev) => {
-      const { [threadId]: _, ...rest } = prev
+      const { [threadId]: _removed, ...rest } = prev
+      void _removed // Explicitly mark as intentionally unused
       return rest
     })
   }, [])
@@ -677,7 +696,14 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
       subscribeToStream,
       getStreamData
     }),
-    [getThreadState, getThreadActions, initializeThread, cleanupThread, subscribeToStream, getStreamData]
+    [
+      getThreadState,
+      getThreadActions,
+      initializeThread,
+      cleanupThread,
+      subscribeToStream,
+      getStreamData
+    ]
   )
 
   return (
@@ -697,10 +723,9 @@ export function ThreadProvider({ children }: { children: ReactNode }): React.JSX
   )
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useThreadContext(): ThreadContextValue {
   const context = useContext(ThreadContext)
-  if (!context) throw new Error('useThreadContext must be used within a ThreadProvider')
+  if (!context) throw new Error("useThreadContext must be used within a ThreadProvider")
   return context
 }
 

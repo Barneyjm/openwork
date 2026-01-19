@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
-import { ChevronDown, Check, AlertCircle, Key } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Button } from '@/components/ui/button'
-import { useAppStore } from '@/lib/store'
-import { useCurrentThread } from '@/lib/thread-context'
-import { cn } from '@/lib/utils'
-import { ApiKeyDialog } from './ApiKeyDialog'
-import type { Provider, ProviderId } from '@/types'
+import { useState, useEffect } from "react"
+import { ChevronDown, Check, AlertCircle, Key } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button"
+import { useAppStore } from "@/lib/store"
+import { useCurrentThread } from "@/lib/thread-context"
+import { cn } from "@/lib/utils"
+import { ApiKeyDialog } from "./ApiKeyDialog"
+import type { Provider, ProviderId } from "@/types"
 
 // Provider icons as simple SVG components
 function AnthropicIcon({ className }: { className?: string }): React.JSX.Element {
@@ -42,9 +42,9 @@ const PROVIDER_ICONS: Record<ProviderId, React.FC<{ className?: string }>> = {
 
 // Fallback providers in case the backend hasn't loaded them yet
 const FALLBACK_PROVIDERS: Provider[] = [
-  { id: 'anthropic', name: 'Anthropic', hasApiKey: false },
-  { id: 'openai', name: 'OpenAI', hasApiKey: false },
-  { id: 'google', name: 'Google', hasApiKey: false }
+  { id: "anthropic", name: "Anthropic", hasApiKey: false },
+  { id: "openai", name: "OpenAI", hasApiKey: false },
+  { id: "google", name: "Google", hasApiKey: false }
 ]
 
 interface ModelSwitcherProps {
@@ -70,15 +70,16 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps): React.JSX.Eleme
   const displayProviders = providers.length > 0 ? providers : FALLBACK_PROVIDERS
 
   // Determine effective provider ID (manual selection > current model > default)
-  const effectiveProviderId = selectedProviderId ||
-    (currentModel ? models.find(m => m.id === currentModel)?.provider : null) ||
+  const effectiveProviderId =
+    selectedProviderId ||
+    (currentModel ? models.find((m) => m.id === currentModel)?.provider : null) ||
     (displayProviders.length > 0 ? displayProviders[0].id : null)
 
-  const selectedModel = models.find(m => m.id === currentModel)
+  const selectedModel = models.find((m) => m.id === currentModel)
   const filteredModels = effectiveProviderId
-    ? models.filter(m => m.provider === effectiveProviderId)
+    ? models.filter((m) => m.provider === effectiveProviderId)
     : []
-  const selectedProvider = displayProviders.find(p => p.id === effectiveProviderId)
+  const selectedProvider = displayProviders.find((p) => p.id === effectiveProviderId)
 
   function handleProviderClick(provider: Provider): void {
     setSelectedProviderId(provider.id)
@@ -114,7 +115,7 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps): React.JSX.Eleme
           >
             {selectedModel ? (
               <>
-                {PROVIDER_ICONS[selectedModel.provider]?.({ className: 'size-3.5' })}
+                {PROVIDER_ICONS[selectedModel.provider]?.({ className: "size-3.5" })}
                 <span className="font-mono">{selectedModel.id}</span>
               </>
             ) : (
@@ -172,10 +173,7 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps): React.JSX.Eleme
                   <p className="text-xs text-muted-foreground mb-3">
                     API key required for {selectedProvider.name}
                   </p>
-                  <Button
-                    size="sm"
-                    onClick={() => handleConfigureApiKey(selectedProvider)}
-                  >
+                  <Button size="sm" onClick={() => handleConfigureApiKey(selectedProvider)}>
                     Configure API Key
                   </Button>
                 </div>
@@ -202,9 +200,7 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps): React.JSX.Eleme
                     ))}
 
                     {filteredModels.length === 0 && (
-                      <p className="text-xs text-muted-foreground px-2 py-4">
-                        No models available
-                      </p>
+                      <p className="text-xs text-muted-foreground px-2 py-4">No models available</p>
                     )}
                   </div>
 

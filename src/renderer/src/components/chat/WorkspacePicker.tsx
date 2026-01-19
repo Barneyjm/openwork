@@ -1,14 +1,10 @@
-import { selectWorkspaceFolder } from '@/lib/workspace-utils'
-import { Check, ChevronDown, Folder } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover'
-import { useCurrentThread } from '@/lib/thread-context'
-import { cn } from '@/lib/utils'
+import { selectWorkspaceFolder } from "@/lib/workspace-utils"
+import { Check, ChevronDown, Folder } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useCurrentThread } from "@/lib/thread-context"
+import { cn } from "@/lib/utils"
 
 interface WorkspacePickerProps {
   threadId: string
@@ -43,7 +39,7 @@ export function WorkspacePicker({ threadId }: WorkspacePickerProps): React.JSX.E
     await selectWorkspaceFolder(threadId, setWorkspacePath, setWorkspaceFiles, setLoading, setOpen)
   }
 
-  const folderName = workspacePath?.split('/').pop()
+  const folderName = workspacePath?.split("/").pop()
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -52,14 +48,14 @@ export function WorkspacePicker({ threadId }: WorkspacePickerProps): React.JSX.E
           variant="ghost"
           size="sm"
           className={cn(
-            'h-7 px-2 text-xs gap-1.5',
-            workspacePath ? 'text-foreground' : 'text-amber-500'
+            "h-7 px-2 text-xs gap-1.5",
+            workspacePath ? "text-foreground" : "text-amber-500"
           )}
           disabled={!threadId}
         >
           <Folder className="size-3.5" />
           <span className="max-w-[120px] truncate">
-            {workspacePath ? folderName : 'Select workspace'}
+            {workspacePath ? folderName : "Select workspace"}
           </span>
           <ChevronDown className="size-3 opacity-50" />
         </Button>
@@ -94,7 +90,8 @@ export function WorkspacePicker({ threadId }: WorkspacePickerProps): React.JSX.E
           ) : (
             <div className="space-y-2">
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Select a folder for the agent to work in. The agent will read and write files directly to this location.
+                Select a folder for the agent to work in. The agent will read and write files
+                directly to this location.
               </p>
               <Button
                 variant="default"

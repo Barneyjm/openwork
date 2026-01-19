@@ -1,37 +1,37 @@
-import { CircleGauge, Zap, ArrowDown, ArrowUp, Database } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
-import type { TokenUsage } from '@/lib/thread-context'
+import { CircleGauge, Zap, ArrowDown, ArrowUp, Database } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import type { TokenUsage } from "@/lib/thread-context"
 
 // Context window limits by model (in tokens)
 // These are approximate and may vary
 const MODEL_CONTEXT_LIMITS: Record<string, number> = {
   // Anthropic models
-  'claude-opus-4-5-20251101': 200_000,
-  'claude-sonnet-4-5-20250929': 200_000,
-  'claude-3-5-sonnet-20241022': 200_000,
-  'claude-3-5-haiku-20241022': 200_000,
-  'claude-3-opus-20240229': 200_000,
-  'claude-3-sonnet-20240229': 200_000,
-  'claude-3-haiku-20240307': 200_000,
+  "claude-opus-4-5-20251101": 200_000,
+  "claude-sonnet-4-5-20250929": 200_000,
+  "claude-3-5-sonnet-20241022": 200_000,
+  "claude-3-5-haiku-20241022": 200_000,
+  "claude-3-opus-20240229": 200_000,
+  "claude-3-sonnet-20240229": 200_000,
+  "claude-3-haiku-20240307": 200_000,
   // OpenAI models
-  'gpt-4o': 128_000,
-  'gpt-4o-mini': 128_000,
-  'gpt-4-turbo': 128_000,
-  'gpt-4': 8_192,
-  'o1': 200_000,
-  'o1-mini': 128_000,
-  'o3': 200_000,
-  'o3-mini': 200_000,
+  "gpt-4o": 128_000,
+  "gpt-4o-mini": 128_000,
+  "gpt-4-turbo": 128_000,
+  "gpt-4": 8_192,
+  o1: 200_000,
+  "o1-mini": 128_000,
+  o3: 200_000,
+  "o3-mini": 200_000,
   // Google models
-  'gemini-3-pro-preview': 2_000_000,
-  'gemini-3-flash-preview': 1_000_000,
-  'gemini-2.5-pro': 2_000_000,
-  'gemini-2.5-flash': 1_000_000,
-  'gemini-2.5-flash-lite': 1_000_000,
-  'gemini-2.0-flash': 1_000_000,
-  'gemini-1.5-pro': 2_000_000,
-  'gemini-1.5-flash': 1_000_000
+  "gemini-3-pro-preview": 2_000_000,
+  "gemini-3-flash-preview": 1_000_000,
+  "gemini-2.5-pro": 2_000_000,
+  "gemini-2.5-flash": 1_000_000,
+  "gemini-2.5-flash-lite": 1_000_000,
+  "gemini-2.0-flash": 1_000_000,
+  "gemini-1.5-pro": 2_000_000,
+  "gemini-1.5-flash": 1_000_000
 }
 
 // Default limit if model not found
@@ -51,9 +51,9 @@ function getContextLimit(modelId: string): number {
   }
 
   // Infer from model name patterns
-  if (modelId.includes('claude')) return 200_000
-  if (modelId.includes('gpt-4o') || modelId.includes('o1') || modelId.includes('o3')) return 128_000
-  if (modelId.includes('gemini')) return 1_000_000
+  if (modelId.includes("claude")) return 200_000
+  if (modelId.includes("gpt-4o") || modelId.includes("o1") || modelId.includes("o3")) return 128_000
+  if (modelId.includes("gemini")) return 1_000_000
 
   return DEFAULT_CONTEXT_LIMIT
 }
@@ -92,26 +92,26 @@ export function ContextUsageIndicator({
   const usagePercent = Math.min((usedTokens / contextLimit) * 100, 100)
 
   // Determine color based on usage
-  let colorClass = 'text-blue-500'
-  let bgColorClass = 'bg-blue-500/20'
-  let barColorClass = 'bg-blue-500'
-  let statusText = 'Normal'
+  let colorClass = "text-blue-500"
+  let bgColorClass = "bg-blue-500/20"
+  let barColorClass = "bg-blue-500"
+  let statusText = "Normal"
 
   if (usagePercent >= 90) {
-    colorClass = 'text-red-500'
-    bgColorClass = 'bg-red-500/20'
-    barColorClass = 'bg-red-500'
-    statusText = 'Critical'
+    colorClass = "text-red-500"
+    bgColorClass = "bg-red-500/20"
+    barColorClass = "bg-red-500"
+    statusText = "Critical"
   } else if (usagePercent >= 75) {
-    colorClass = 'text-orange-500'
-    bgColorClass = 'bg-orange-500/20'
-    barColorClass = 'bg-orange-500'
-    statusText = 'Warning'
+    colorClass = "text-orange-500"
+    bgColorClass = "bg-orange-500/20"
+    barColorClass = "bg-orange-500"
+    statusText = "Warning"
   } else if (usagePercent >= 50) {
-    colorClass = 'text-yellow-500'
-    bgColorClass = 'bg-yellow-500/20'
-    barColorClass = 'bg-yellow-500'
-    statusText = 'Moderate'
+    colorClass = "text-yellow-500"
+    bgColorClass = "bg-yellow-500/20"
+    barColorClass = "bg-yellow-500"
+    statusText = "Moderate"
   }
 
   const hasCacheData = tokenUsage.cacheReadTokens || tokenUsage.cacheCreationTokens
@@ -121,7 +121,7 @@ export function ContextUsageIndicator({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs transition-colors hover:opacity-80',
+            "flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs transition-colors hover:opacity-80",
             bgColorClass,
             colorClass,
             className
@@ -131,21 +131,21 @@ export function ContextUsageIndicator({
           <span className="font-mono">
             {formatTokenCount(usedTokens)} / {formatTokenCount(contextLimit)}
           </span>
-          <span className="text-[10px] opacity-70">
-            ({usagePercent.toFixed(0)}%)
-          </span>
+          <span className="text-[10px] opacity-70">({usagePercent.toFixed(0)}%)</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-72 p-0 bg-background border-border"
-        align="end"
-        sideOffset={8}
-      >
+      <PopoverContent className="w-72 p-0 bg-background border-border" align="end" sideOffset={8}>
         <div className="p-3 space-y-3">
           {/* Header */}
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-foreground">Context Window</span>
-            <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded', bgColorClass, colorClass)}>
+            <span
+              className={cn(
+                "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                bgColorClass,
+                colorClass
+              )}
+            >
               {statusText}
             </span>
           </div>
@@ -154,7 +154,7 @@ export function ContextUsageIndicator({
           <div className="space-y-1">
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all', barColorClass)}
+                className={cn("h-full rounded-full transition-all", barColorClass)}
                 style={{ width: `${usagePercent}%` }}
               />
             </div>
@@ -221,27 +221,24 @@ export function ContextUsageIndicator({
                     </div>
                   )}
 
-                  {tokenUsage.cacheCreationTokens !== undefined && tokenUsage.cacheCreationTokens > 0 && (
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 text-blue-500">
-                        <Database className="size-3" />
-                        <span>Cache created</span>
+                  {tokenUsage.cacheCreationTokens !== undefined &&
+                    tokenUsage.cacheCreationTokens > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-blue-500">
+                          <Database className="size-3" />
+                          <span>Cache created</span>
+                        </div>
+                        <span className="font-mono text-blue-500">
+                          {formatTokenCountFull(tokenUsage.cacheCreationTokens)}
+                        </span>
                       </div>
-                      <span className="font-mono text-blue-500">
-                        {formatTokenCountFull(tokenUsage.cacheCreationTokens)}
-                      </span>
-                    </div>
-                  )}
+                    )}
                 </>
               ) : (
-                <div className="text-xs text-muted-foreground">
-                  No cached tokens
-                </div>
+                <div className="text-xs text-muted-foreground">No cached tokens</div>
               )}
             </div>
           </div>
-
-
 
           {/* Last updated */}
           <div className="pt-2 border-t border-border">

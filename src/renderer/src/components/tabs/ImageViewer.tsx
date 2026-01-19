@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, RotateCw, Hand } from 'lucide-react'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
+import { useState, useRef } from "react"
+import { ZoomIn, ZoomOut, Maximize2, RotateCw, Hand } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
 
 interface ImageViewerProps {
   filePath: string
@@ -9,7 +9,11 @@ interface ImageViewerProps {
   mimeType: string
 }
 
-export function ImageViewer({ filePath, base64Content, mimeType }: ImageViewerProps): React.JSX.Element {
+export function ImageViewer({
+  filePath,
+  base64Content,
+  mimeType
+}: ImageViewerProps): React.JSX.Element {
   const [zoom, setZoom] = useState(100)
   const [rotation, setRotation] = useState(0)
   const [isPanning, setIsPanning] = useState(false)
@@ -17,7 +21,7 @@ export function ImageViewer({ filePath, base64Content, mimeType }: ImageViewerPr
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const fileName = filePath.split('/').pop() || filePath
+  const fileName = filePath.split("/").pop() || filePath
   const imageUrl = `data:${mimeType};base64,${base64Content}`
 
   const handleZoomIn = (): void => {
@@ -73,7 +77,6 @@ export function ImageViewer({ filePath, base64Content, mimeType }: ImageViewerPr
 
   // Reset pan when zoom changes to 100 or less
 
-
   const canPan = zoom > 100
 
   return (
@@ -106,9 +109,7 @@ export function ImageViewer({ filePath, base64Content, mimeType }: ImageViewerPr
             <ZoomOut className="size-4" />
           </Button>
 
-          <span className="text-xs text-muted-foreground min-w-[3rem] text-center">
-            {zoom}%
-          </span>
+          <span className="text-xs text-muted-foreground min-w-[3rem] text-center">{zoom}%</span>
 
           <Button
             variant="ghost"
@@ -120,21 +121,11 @@ export function ImageViewer({ filePath, base64Content, mimeType }: ImageViewerPr
             <ZoomIn className="size-4" />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRotate}
-            className="h-7 px-2"
-          >
+          <Button variant="ghost" size="sm" onClick={handleRotate} className="h-7 px-2">
             <RotateCw className="size-4" />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleResetZoom}
-            className="h-7 px-2"
-          >
+          <Button variant="ghost" size="sm" onClick={handleResetZoom} className="h-7 px-2">
             <Maximize2 className="size-4" />
           </Button>
         </div>
@@ -150,8 +141,8 @@ export function ImageViewer({ filePath, base64Content, mimeType }: ImageViewerPr
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
           style={{
-            cursor: canPan ? (isPanning ? 'grabbing' : 'grab') : 'default',
-            userSelect: 'none'
+            cursor: canPan ? (isPanning ? "grabbing" : "grab") : "default",
+            userSelect: "none"
           }}
         >
           <img
@@ -160,7 +151,7 @@ export function ImageViewer({ filePath, base64Content, mimeType }: ImageViewerPr
             className="max-w-full h-auto transition-transform duration-200"
             style={{
               transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom / 100}) rotate(${rotation}deg)`,
-              imageRendering: zoom > 100 ? 'pixelated' : 'auto'
+              imageRendering: zoom > 100 ? "pixelated" : "auto"
             }}
             draggable={false}
           />
