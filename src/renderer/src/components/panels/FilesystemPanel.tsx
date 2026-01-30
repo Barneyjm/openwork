@@ -40,7 +40,7 @@ export function FilesystemPanel() {
   // Auto-expand root when workspace path changes
   useEffect(() => {
     if (workspacePath) {
-      setExpandedDirs(new Set([workspacePath]))
+      setExpandedDirs(new Set([]))
     }
   }, [workspacePath])
 

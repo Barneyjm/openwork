@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { Plus, MessageSquare, Trash2, Pencil, Loader2, LayoutGrid } from "lucide-react"
+import { Plus, MessageSquare, Trash2, Pencil, Loader2, LayoutGrid, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAppStore } from "@/lib/store"
-import { useThreadStream } from "@/lib/thread-context"
+import { useThreadStream, useCurrentThread } from "@/lib/thread-context"
 import { cn, formatRelativeTime, truncate } from "@/lib/utils"
 import {
   ContextMenu,
@@ -14,13 +14,19 @@ import {
 } from "@/components/ui/context-menu"
 import type { Thread } from "@/types"
 
-// Thread loading indicator that subscribes to the stream context
-function ThreadLoadingIcon({ threadId }: { threadId: string }): React.JSX.Element {
+// Thread status indicator that shows loading, interrupted, or default state
+function ThreadStatusIcon({ threadId }: { threadId: string }): React.JSX.Element {
   const { isLoading } = useThreadStream(threadId)
+  const { pendingApproval } = useCurrentThread(threadId)
 
   if (isLoading) {
     return <Loader2 className="size-4 shrink-0 text-status-info animate-spin" />
   }
+  
+  if (pendingApproval) {
+    return <AlertCircle className="size-4 shrink-0 text-status-warning" />
+  }
+  
   return <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
 }
 
@@ -64,7 +70,7 @@ function ThreadListItem({
             }
           }}
         >
-          <ThreadLoadingIcon threadId={thread.thread_id} />
+          <ThreadStatusIcon threadId={thread.thread_id} />
           <div className="flex-1 min-w-0 overflow-hidden">
             {isEditing ? (
               <input

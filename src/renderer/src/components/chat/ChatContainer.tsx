@@ -35,7 +35,7 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
   const scrollRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef(true)
 
-  const { loadThreads, generateTitleForFirstMessage } = useAppStore()
+  const { threads, loadThreads, generateTitleForFirstMessage } = useAppStore()
 
   // Get persisted thread state and actions from context
   const {
@@ -249,7 +249,11 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
     appendMessage(userMessage)
 
     if (isFirstMessage) {
-      generateTitleForFirstMessage(threadId, message)
+      const currentThread = threads.find((t) => t.thread_id === threadId)
+      const hasDefaultTitle = currentThread?.title?.startsWith("Thread ")
+      if (hasDefaultTitle) {
+        generateTitleForFirstMessage(threadId, message)
+      }
     }
 
     await stream.submit(
