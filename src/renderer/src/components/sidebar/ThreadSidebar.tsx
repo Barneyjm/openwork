@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Plus, MessageSquare, Trash2, Pencil, Loader2 } from "lucide-react"
+import { Plus, MessageSquare, Trash2, Pencil, Loader2, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAppStore } from "@/lib/store"
@@ -120,8 +120,15 @@ function ThreadListItem({
 }
 
 export function ThreadSidebar(): React.JSX.Element {
-  const { threads, currentThreadId, createThread, selectThread, deleteThread, updateThread } =
-    useAppStore()
+  const {
+    threads,
+    currentThreadId,
+    createThread,
+    selectThread,
+    deleteThread,
+    updateThread,
+    setShowKanbanView
+  } = useAppStore()
 
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState("")
@@ -189,6 +196,19 @@ export function ThreadSidebar(): React.JSX.Element {
           )}
         </div>
       </ScrollArea>
+
+      {/* Overview Toggle */}
+      <div className="p-2 border-t border-border">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2"
+          onClick={() => setShowKanbanView(true)}
+        >
+          <LayoutGrid className="size-4" />
+          Overview
+        </Button>
+      </div>
     </aside>
   )
 }

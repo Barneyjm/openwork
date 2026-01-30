@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import { useRef, useEffect, useMemo, useCallback } from "react"
 import { Send, Square, Loader2, AlertCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -31,7 +31,6 @@ interface ChatContainerProps {
 }
 
 export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Element {
-  const [input, setInput] = useState("")
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const isAtBottomRef = useRef(true)
@@ -47,13 +46,15 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
     workspacePath,
     tokenUsage,
     currentModel,
+    draftInput: input,
     setTodos,
     setWorkspaceFiles,
     setWorkspacePath,
     setPendingApproval,
     appendMessage,
     setError,
-    clearError
+    clearError,
+    setDraftInput: setInput
   } = useCurrentThread(threadId)
 
   // Get the stream data via subscription - reactive updates without re-rendering provider

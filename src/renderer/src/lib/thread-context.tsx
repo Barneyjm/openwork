@@ -46,6 +46,7 @@ export interface ThreadState {
   activeTab: "agent" | string
   fileContents: Record<string, string>
   tokenUsage: TokenUsage | null
+  draftInput: string
 }
 
 // Stream instance type
@@ -74,6 +75,7 @@ export interface ThreadActions {
   closeFile: (path: string) => void
   setActiveTab: (tab: "agent" | string) => void
   setFileContents: (path: string, content: string) => void
+  setDraftInput: (input: string) => void
 }
 
 // Context value
@@ -85,6 +87,12 @@ interface ThreadContextValue {
   // Stream subscription
   subscribeToStream: (threadId: string, callback: () => void) => () => void
   getStreamData: (threadId: string) => StreamData
+  // Get all initialized thread states (for kanban view)
+  getAllThreadStates: () => Record<string, ThreadState>
+  // Get all stream loading states (for kanban view)
+  getAllStreamLoadingStates: () => Record<string, boolean>
+  // Subscribe to all stream updates
+  subscribeToAllStreams: (callback: () => void) => () => void
 }
 
 // Default thread state
@@ -100,7 +108,8 @@ const createDefaultThreadState = (): ThreadState => ({
   openFiles: [],
   activeTab: "agent",
   fileContents: {},
-  tokenUsage: null
+  tokenUsage: null,
+  draftInput: ""
 })
 
 const defaultStreamData: StreamData = {
@@ -214,6 +223,7 @@ function ThreadStreamHolder({
 export function ThreadProvider({ children }: { children: ReactNode }) {
   const [threadStates, setThreadStates] = useState<Record<string, ThreadState>>({})
   const [activeThreadIds, setActiveThreadIds] = useState<Set<string>>(new Set())
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({})
   const initializedThreadsRef = useRef<Set<string>>(new Set())
   const actionsCache = useRef<Record<string, ThreadActions>>({})
 
@@ -234,6 +244,11 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     (threadId: string, data: StreamData) => {
       streamDataRef.current[threadId] = data
       notifyStreamSubscribers(threadId)
+      // Update loading states for kanban view
+      setLoadingStates((prev) => {
+        if (prev[threadId] === data.isLoading) return prev
+        return { ...prev, [threadId]: data.isLoading }
+      })
     },
     [notifyStreamSubscribers]
   )
@@ -269,6 +284,18 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     },
     [threadStates]
   )
+
+  const getAllThreadStates = useCallback((): Record<string, ThreadState> => {
+    return threadStates
+  }, [threadStates])
+
+  const getAllStreamLoadingStates = useCallback((): Record<string, boolean> => {
+    return loadingStates
+  }, [loadingStates])
+
+  const subscribeToAllStreams = useCallback(() => {
+    return () => {}
+  }, [])
 
   const updateThreadState = useCallback(
     (threadId: string, updater: (prev: ThreadState) => Partial<ThreadState>) => {
@@ -497,6 +524,9 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
           updateThreadState(threadId, (state) => ({
             fileContents: { ...state.fileContents, [path]: content }
           }))
+        },
+        setDraftInput: (input: string) => {
+          updateThreadState(threadId, () => ({ draftInput: input }))
         }
       }
 
@@ -694,7 +724,10 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
       initializeThread,
       cleanupThread,
       subscribeToStream,
-      getStreamData
+      getStreamData,
+      getAllThreadStates,
+      getAllStreamLoadingStates,
+      subscribeToAllStreams
     }),
     [
       getThreadState,
@@ -702,7 +735,10 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
       initializeThread,
       cleanupThread,
       subscribeToStream,
-      getStreamData
+      getStreamData,
+      getAllThreadStates,
+      getAllStreamLoadingStates,
+      subscribeToAllStreams
     ]
   )
 
@@ -771,4 +807,16 @@ export function useThreadState(threadId: string | null): (ThreadState & ThreadAc
   const actions = context.getThreadActions(threadId)
 
   return { ...state, ...actions }
+}
+
+// Hook to get all initialized thread states (for kanban view)
+export function useAllThreadStates(): Record<string, ThreadState> {
+  const context = useThreadContext()
+  return context.getAllThreadStates()
+}
+
+// Hook to get all stream loading states with reactivity
+export function useAllStreamLoadingStates(): Record<string, boolean> {
+  const context = useThreadContext()
+  return context.getAllStreamLoadingStates()
 }

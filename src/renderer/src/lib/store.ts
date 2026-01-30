@@ -19,6 +19,10 @@ interface AppState {
   // Sidebar state
   sidebarCollapsed: boolean
 
+  // Kanban view state
+  showKanbanView: boolean
+  showSubagentsInKanban: boolean
+
   // Thread actions
   loadThreads: () => Promise<void>
   createThread: (metadata?: Record<string, unknown>) => Promise<Thread>
@@ -42,6 +46,10 @@ interface AppState {
   // Sidebar actions
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
+
+  // Kanban actions
+  setShowKanbanView: (show: boolean) => void
+  setShowSubagentsInKanban: (show: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -53,6 +61,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   rightPanelTab: "todos",
   settingsOpen: false,
   sidebarCollapsed: false,
+  showKanbanView: false,
+  showSubagentsInKanban: true,
 
   // Thread actions
   loadThreads: async () => {
@@ -69,14 +79,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     const thread = await window.api.threads.create(metadata)
     set((state) => ({
       threads: [thread, ...state.threads],
-      currentThreadId: thread.thread_id
+      currentThreadId: thread.thread_id,
+      showKanbanView: false
     }))
     return thread
   },
 
   selectThread: async (threadId: string) => {
     // Just update currentThreadId - ThreadContext handles per-thread state
-    set({ currentThreadId: threadId })
+    // Also close kanban view when selecting a thread
+    set({ currentThreadId: threadId, showKanbanView: false })
   },
 
   deleteThread: async (threadId: string) => {
@@ -168,5 +180,18 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setSidebarCollapsed: (collapsed: boolean) => {
     set({ sidebarCollapsed: collapsed })
+  },
+
+  // Kanban actions
+  setShowKanbanView: (show: boolean) => {
+    if (show) {
+      set({ showKanbanView: true, currentThreadId: null })
+    } else {
+      set({ showKanbanView: false })
+    }
+  },
+
+  setShowSubagentsInKanban: (show: boolean) => {
+    set({ showSubagentsInKanban: show })
   }
 }))
