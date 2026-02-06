@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react"
+import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react"
 import {
   ListTodo,
   FolderTree,
@@ -746,15 +746,11 @@ function buildFileTree(files: FileInfo[]): TreeNode[] {
 }
 
 function FileTree({ files }: { files: FileInfo[] }): React.JSX.Element {
+  const { currentThreadId } = useAppStore()
+  const threadState = useThreadState(currentThreadId)
+  const openFile = threadState?.openFile
   const tree = useMemo(() => buildFileTree(files), [files])
-  const [expanded, setExpanded] = useState<Set<string>>(() => {
-    // Start with all directories expanded
-    const dirs = new Set<string>()
-    files.forEach((f) => {
-      if (f.is_dir ?? false) dirs.add(f.path)
-    })
-    return dirs
-  })
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   const toggleExpand = useCallback((path: string) => {
     setExpanded((prev) => {
@@ -777,91 +773,109 @@ function FileTree({ files }: { files: FileInfo[] }): React.JSX.Element {
           depth={0}
           expanded={expanded}
           onToggle={toggleExpand}
+          openFile={openFile}
         />
       ))}
     </div>
   )
 }
 
-function FileTreeNode({
-  node,
-  depth,
-  expanded,
-  onToggle
-}: {
-  node: TreeNode
-  depth: number
-  expanded: Set<string>
-  onToggle: (path: string) => void
-}): React.JSX.Element {
-  const { currentThreadId } = useAppStore()
-  const threadState = useThreadState(currentThreadId)
-  const openFile = threadState?.openFile
-  const isExpanded = expanded.has(node.path)
-  const hasChildren = node.children.length > 0
-  const paddingLeft = 8 + depth * 16
+const FileTreeNode = memo(
+  function FileTreeNode({
+    node,
+    depth,
+    expanded,
+    onToggle,
+    openFile
+  }: {
+    node: TreeNode
+    depth: number
+    expanded: Set<string>
+    onToggle: (path: string) => void
+    openFile?: (path: string, name: string) => void
+  }): React.JSX.Element {
+    const isExpanded = expanded.has(node.path)
+    const hasChildren = node.children.length > 0
+    const paddingLeft = 8 + depth * 16
 
-  const handleClick = (): void => {
-    if (node.is_dir) {
-      onToggle(node.path)
-    } else if (openFile) {
-      // Open file in a new tab
-      openFile(node.path, node.name)
+    const handleClick = (): void => {
+      if (node.is_dir) {
+        onToggle(node.path)
+      } else if (openFile) {
+        // Open file in a new tab
+        openFile(node.path, node.name)
+      }
     }
+
+    return (
+      <>
+        <div
+          onClick={handleClick}
+          className={cn(
+            "flex items-center gap-1.5 py-1 pr-3 text-xs hover:bg-background-interactive cursor-pointer"
+          )}
+          style={{ paddingLeft }}
+        >
+          {/* Expand/collapse chevron for directories */}
+          {node.is_dir ? (
+            <span className="w-3.5 flex items-center justify-center shrink-0">
+              {hasChildren &&
+                (isExpanded ? (
+                  <ChevronDown className="size-3 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="size-3 text-muted-foreground" />
+                ))}
+            </span>
+          ) : (
+            <span className="w-3.5 shrink-0" />
+          )}
+
+          {/* Icon */}
+          <FileIcon name={node.name} isDir={node.is_dir} isOpen={isExpanded} />
+
+          {/* Name */}
+          <span className="truncate flex-1">{node.name}</span>
+
+          {/* Size for files */}
+          {!node.is_dir && node.size !== undefined && (
+            <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+              {formatSize(node.size)}
+            </span>
+          )}
+        </div>
+
+        {/* Children */}
+        {node.is_dir &&
+          isExpanded &&
+          node.children.map((child) => (
+            <FileTreeNode
+              key={child.path}
+              node={child}
+              depth={depth + 1}
+              expanded={expanded}
+              onToggle={onToggle}
+              openFile={openFile}
+            />
+          ))}
+      </>
+    )
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if:
+    // 1. The node itself changed
+    // 2. The expansion state of THIS node changed
+    // 3. The openFile callback changed
+    // 4. The onToggle callback changed
+    return (
+      prevProps.node === nextProps.node &&
+      prevProps.expanded.has(prevProps.node.path) ===
+        nextProps.expanded.has(nextProps.node.path) &&
+      prevProps.openFile === nextProps.openFile &&
+      prevProps.onToggle === nextProps.onToggle &&
+      prevProps.depth === nextProps.depth
+    )
   }
-
-  return (
-    <>
-      <div
-        onClick={handleClick}
-        className={cn(
-          "flex items-center gap-1.5 py-1 pr-3 text-xs hover:bg-background-interactive cursor-pointer"
-        )}
-        style={{ paddingLeft }}
-      >
-        {/* Expand/collapse chevron for directories */}
-        {node.is_dir ? (
-          <span className="w-3.5 flex items-center justify-center shrink-0">
-            {hasChildren &&
-              (isExpanded ? (
-                <ChevronDown className="size-3 text-muted-foreground" />
-              ) : (
-                <ChevronRight className="size-3 text-muted-foreground" />
-              ))}
-          </span>
-        ) : (
-          <span className="w-3.5 shrink-0" />
-        )}
-
-        {/* Icon */}
-        <FileIcon name={node.name} isDir={node.is_dir} isOpen={isExpanded} />
-
-        {/* Name */}
-        <span className="truncate flex-1">{node.name}</span>
-
-        {/* Size for files */}
-        {!node.is_dir && node.size !== undefined && (
-          <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
-            {formatSize(node.size)}
-          </span>
-        )}
-      </div>
-
-      {/* Children */}
-      {node.is_dir &&
-        isExpanded &&
-        node.children.map((child) => (
-          <FileTreeNode
-            key={child.path}
-            node={child}
-            depth={depth + 1}
-            expanded={expanded}
-            onToggle={onToggle}
-          />
-        ))}
-    </>
-  )
-}
+)
 
 function FileIcon({
   name,
